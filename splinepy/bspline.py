@@ -470,3 +470,61 @@ class BSpline(BSplineBase):
         )
 
         return same_nurbs
+
+    def refine_elements_by_aspect_ratio(self, threshold):
+        """Insert a knot at the center of each element where the physical
+        aspect of the dimensions is larger than the threshold.
+
+        Parameters
+        ----------
+        threshold : float
+            The threshold describes the maximal allowed aspect between
+            the minimal and maximal lenghts of an element in physical space.
+            Values larger than 1 refine along the maximal direction, while
+            values smaller than 1 refine along the minimal direction.
+
+        Returns
+        -------
+        list
+            Specifies whether at least one knot was inserted in the parametric
+            dimension.
+        """
+
+        # Caluculate the lengths of each element in parametric space
+        element_lengths = utils.data.cartesian_product(
+            [
+                np.convolve([1, -1], self.unique_knots[i], mode="valid")
+                for i in range(self.para_dim)
+            ]
+        )
+        # Caluculate the center of each element in parametric space
+        element_centers = utils.data.cartesian_product(
+            [
+                np.convolve([0.5, 0.5], self.unique_knots[i], mode="valid")
+                for i in range(self.para_dim)
+            ]
+        )
+
+        # Evaluate the Jacobian in each element's center and approximate
+        # the element's lenghts as secant
+        # Shape: (n_elements, para_dim, dim)
+        aproximate_element_lengths = (
+            self.jacobian(element_centers) * element_lengths[:, :, np.newaxis]
+        )
+
+        # Calulate the norm along physical dimensions
+        # The
+        element_aspects = np.linalg.norm(aproximate_element_lengths, axis=2)
+        element_aspects /= np.min(element_aspects, axis=1).reshape(-1, 1)
+
+        # Track whether a parametric dimension is refined
+        refined_direction = self.para_dim * [False]
+
+        # Refine all elements with aspect ratio larger than threshold
+        for i in range(self.para_dim):
+            refine_elements = np.argwhere(element_aspects[:, i] > threshold)
+            if refine_elements.shape[0] > 0:
+                refined_direction[i] = True
+                self.insert_knots(i, element_centers[refine_elements, i])
+
+        return refined_direction
