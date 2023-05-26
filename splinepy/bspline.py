@@ -287,8 +287,10 @@ class BSplineBase(spline.Spline):
         # use core spline based init and name to type conversion to find
         # correct types
         return [settings.NAME_TO_TYPE[p.name](spline=p) for p in patches]
-    
-    def refine_elements_by_aspect_ratio(self, threshold):
+
+    def refine_elements_by_aspect_ratio(
+        self, threshold, parametric_dimensions=None
+    ):
         """Insert a knot at the center of each element where the physical
         aspect of the dimensions is larger than the threshold.
 
@@ -306,6 +308,8 @@ class BSplineBase(spline.Spline):
             Specifies whether at least one knot was inserted in the parametric
             dimension.
         """
+        if parametric_dimensions is None:
+            parametric_dimensions = [i for i in range(self.para_dim)]
 
         # Caluculate the lengths of each element in parametric space
         element_lengths = utils.data.cartesian_product(
@@ -330,19 +334,41 @@ class BSplineBase(spline.Spline):
         )
 
         # Calulate the norm along physical dimensions
-        # The
         element_aspects = np.linalg.norm(aproximate_element_lengths, axis=2)
-        element_aspects /= np.min(element_aspects, axis=1).reshape(-1, 1)
+        n_refinement = np.floor_divide(
+            element_aspects / np.min(element_aspects, axis=1).reshape(-1, 1),
+            threshold,
+        ).astype(int)
 
         # Track whether a parametric dimension is refined
         refined_direction = self.para_dim * [False]
+        refine_knots = []
 
-        # Refine all elements with aspect ratio larger than threshold
-        for i in range(self.para_dim):
-            refine_elements = np.argwhere(element_aspects[:, i] > threshold)
-            if refine_elements.shape[0] > 0:
+        for para_dim in range(self.para_dim):
+            if np.any(n_refinement[:, para_dim]):
+                refine_knots.append(
+                    np.concatenate(
+                        [
+                            element_centers[n, para_dim]
+                            + np.linspace(
+                                -0.5, 0.5, n_refinement[n, para_dim] + 2
+                            )[1:-1]
+                            * element_lengths[n, para_dim]
+                            for n in np.argwhere(
+                                n_refinement[:, para_dim] > 0
+                            ).flatten()
+                        ]
+                    )
+                )
+                print(para_dim, (refine_knots[para_dim]))
+            else:
+                refine_knots.append(None)
+
+        # Knot insertion
+        for i in parametric_dimensions:
+            if refine_knots[i] is not None:
                 refined_direction[i] = True
-                self.insert_knots(i, element_centers[refine_elements, i])
+                self.insert_knots(i, np.unique(refine_knots[i]))
 
         return refined_direction
 
@@ -728,4 +754,3 @@ class BSpline(BSplineBase):
         )
 
         return same_nurbs
-
