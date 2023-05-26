@@ -12,23 +12,26 @@ geometry = sp.BSpline(
     control_points=[
         [0.0, 0.0],
         [1.0, 0.0],
-        [0.0, 10.0],
-        [1.0, 10.0],
+        [0.0, 1.0],
+        [1.0, 1.0],
     ],
     knot_vectors=[[0, 0, 1, 1], [0, 0, 1, 1]],
 )
-geometry.elevate_degree(0)
-geometry.elevate_degree(1)
 
-geometry.insert_knots(1, [1 / 10, 2 / 10, 3 / 10])
 
-# Refine splines iteratively aspect ratio is reached
-splines = [geometry.copy()]
-refined = [True]
-while any(refined):
-    refined = geometry.refine_elements_by_aspect_ratio(2)
-    splines.append(geometry.copy())
+initgeom = geometry.copy()
+geometry.refine_elements_by_aspect_ratio(2)
+second = geometry.copy()
+geometry.refine_elements_by_aspect_ratio(2)
+third = geometry.copy()
 
+
+gus.show(
+    gus.BSpline(**initgeom.todict()),
+    gus.BSpline(**second.todict()),
+    gus.BSpline(**third.todict()),
+    gus.BSpline(**geometry.todict()),
+)
 
 if has_gus:
     gus_splines = [gus.BSpline(**spline.todict()) for spline in splines]
