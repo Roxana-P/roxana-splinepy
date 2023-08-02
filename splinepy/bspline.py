@@ -222,7 +222,6 @@ class BSplineBase(spline.Spline):
                         ]
                     )
                 )
-                print(para_dim, (refine_knots[para_dim]))
             else:
                 refine_knots.append(None)
 
