@@ -18,21 +18,18 @@ geometry = sp.BSpline(
     knot_vectors=[[0, 0, 1, 1], [0, 0, 1, 1]],
 )
 
+geometry = gus.spline.io.json.load("cross.json")[0]
 
 initgeom = geometry.copy()
-geometry.refine_elements_by_aspect_ratio(2)
+geometry.refine_elements_by_aspect_ratio(20, [1])
 second = geometry.copy()
-geometry.refine_elements_by_aspect_ratio(2)
+geometry.refine_elements_by_aspect_ratio(20, [1])
 third = geometry.copy()
 
-
-gus.show(
-    gus.BSpline(**initgeom.todict()),
-    gus.BSpline(**second.todict()),
-    gus.BSpline(**third.todict()),
-    gus.BSpline(**geometry.todict()),
-)
-
 if has_gus:
-    gus_splines = [gus.BSpline(**spline.todict()) for spline in splines]
-    gus.show.show_vedo(*gus_splines)
+    gus.show(
+        gus.NURBS(**initgeom.todict()),
+        gus.NURBS(**second.todict()),
+        gus.NURBS(**third.todict()),
+        gus.NURBS(**geometry.todict()),
+    )
