@@ -1,0 +1,6 @@
+splinepy.microstructure.tiles.snappytile.SnappyTile.closing\_tile
+=================================================================
+
+.. currentmodule:: splinepy.microstructure.tiles.snappytile
+
+.. automethod:: SnappyTile.closing_tile

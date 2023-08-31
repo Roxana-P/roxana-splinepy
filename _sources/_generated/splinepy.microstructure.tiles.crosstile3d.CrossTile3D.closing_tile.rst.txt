@@ -1,0 +1,6 @@
+splinepy.microstructure.tiles.crosstile3d.CrossTile3D.closing\_tile
+===================================================================
+
+.. currentmodule:: splinepy.microstructure.tiles.crosstile3d
+
+.. automethod:: CrossTile3D.closing_tile

@@ -1,0 +1,6 @@
+splinepy.microstructure.tiles.inversecrosstile3d.InverseCrossTile3D.closing\_tile
+=================================================================================
+
+.. currentmodule:: splinepy.microstructure.tiles.inversecrosstile3d
+
+.. automethod:: InverseCrossTile3D.closing_tile
