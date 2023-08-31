@@ -332,6 +332,7 @@ class BSplineBase(spline.Spline):
         aproximate_element_lengths = (
             self.jacobian(element_centers) * element_lengths[:, :, np.newaxis]
         )
+        aprox_elem_len = aproximate_element_lengths.reshape([len(kv)-1 for kv in self.unique_knots] + [-1])
 
         # Calulate the norm along physical dimensions
         element_aspects = np.linalg.norm(aproximate_element_lengths, axis=2)
@@ -346,20 +347,30 @@ class BSplineBase(spline.Spline):
 
         for para_dim in range(self.para_dim):
             if np.any(n_refinement[:, para_dim]):
-                refine_knots.append(
-                    np.concatenate(
-                        [
-                            element_centers[n, para_dim]
-                            + np.linspace(
-                                -0.5, 0.5, n_refinement[n, para_dim] + 2
-                            )[1:-1]
-                            * element_lengths[n, para_dim]
-                            for n in np.argwhere(
-                                n_refinement[:, para_dim] > 0
-                            ).flatten()
-                        ]
-                    )
-                )
+                ref_knots = [element_centers[n, para_dim] + np.linspace(
+                    -0.5, 0.5, n_refinement[n, para_dim] + 2)[1:-1] * element_lengths[n, para_dim] for n in range(len(n_refinement[:,para_dim])) if n_refinement[n, para_dim] > 0]
+                
+                refine_knots.append(np.concatenate(ref_knots))
+                # refine_knots.append(
+                    # np.concatenate([
+                    #     np.linspace(
+                    #     self.unique_knots[para_dim][k], 
+                    #     self.unique_knots[para_dim][k+1], n_refinement[k, para_dim]) for k in range(len(self.unique_knots[para_dim])-1)
+                    #     ]))
+
+                #     np.concatenate(
+                #         [
+                #             element_centers[n, para_dim]
+                #             + np.linspace(
+                #                 -0.5, 0.5, n_refinement[n, para_dim] + 2
+                #             )[1:-1]
+                #             * element_lengths[n, para_dim]
+                #             for n in np.argwhere(
+                #                 n_refinement[:, para_dim] > 0
+                #             ).flatten()
+                #         ]
+                #     )
+                # )
             else:
                 refine_knots.append(None)
 
